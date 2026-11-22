@@ -51,6 +51,18 @@
     h3 { font-size: 1rem; margin: 18px 0 8px; color: var(--black); }
     .sub { color: var(--muted); font-size: 0.88rem; }
 
+    .warn-banner {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: var(--red);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
     .stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -259,6 +271,10 @@
 </head>
 <body>
   <div class="app">
+    <div id="storageWarning" class="warn-banner">
+      Aviso: tu navegador no está permitiendo guardar datos localmente (por ejemplo, en modo incógnito o con almacenamiento bloqueado). Usa "Guardar copia" para no perder cambios.
+    </div>
+
     <header>
       <div>
         <h1>Red Card — Ventas y Stock</h1>
@@ -289,7 +305,7 @@
         <div class="stat-value" id="statDebts">$0.00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Bajo stock</div>
+        <div class="stat-label">Bajo stock / Agotado</div>
         <div class="stat-value red" id="statLow">0</div>
       </div>
     </div>
@@ -305,7 +321,7 @@
     <section id="tab-sale" class="panel active">
       <div class="grid-2">
         <div>
-          <label for="saleItem">Prenda / Talla / Color</label>
+          <label for="saleItem">Prenda / Talla / Versión</label>
           <select id="saleItem"></select>
         </div>
         <div>
@@ -335,16 +351,16 @@
       <h3>Red Card</h3>
       <div class="grid-2">
         <div>
-          <label for="itemName">Prenda</label>
-          <input type="text" id="itemName" placeholder="Ej. Franela básica" />
+          <label for="itemName">Prenda / Camiseta</label>
+          <input type="text" id="itemName" placeholder="Ej. Camiseta Real Madrid" />
         </div>
         <div>
           <label for="itemSize">Talla</label>
           <input type="text" id="itemSize" placeholder="Ej. M" />
         </div>
         <div>
-          <label for="itemColor">Color</label>
-          <input type="text" id="itemColor" placeholder="Ej. Negro" />
+          <label for="itemVersion">Versión (opcional)</label>
+          <input type="text" id="itemVersion" placeholder="Ej. Local / Visitante / Retro" />
         </div>
         <div>
           <label for="itemCost">Costo unitario</label>
@@ -366,10 +382,10 @@
       <details>
         <summary>Carga rápida por lista (varias prendas a la vez)</summary>
         <p class="sub" style="margin:8px 0;">
-          Escribe una prenda por línea con este orden:<br />
-          <code>Prenda, Talla, Color, Costo, Precio, Stock</code>
+          Escribe una prenda por línea con este orden (si no tiene versión, deja ese espacio vacío entre comas):<br />
+          <code>Prenda, Talla, Versión, Costo, Precio, Stock</code>
         </p>
-        <textarea id="bulkInput" placeholder="Franela básica, M, Negro, 5, 12, 10&#10;Jean clásico, 32, Azul, 14, 28, 5"></textarea>
+        <textarea id="bulkInput" placeholder="Camiseta Real Madrid, M, Local, 12, 25, 4&#10;Franela entrenamiento, L, , 8, 18, 6"></textarea>
         <button class="btn btn-dark" onclick="bulkImportItems()">Cargar lista completa</button>
       </details>
 
@@ -378,7 +394,7 @@
         <thead>
           <tr>
             <th>Prenda</th>
-            <th>Talla / Color</th>
+            <th>Talla / Versión</th>
             <th>Precio</th>
             <th>Stock</th>
             <th>Acciones</th>
@@ -422,7 +438,7 @@
         </div>
         <div>
           <label for="debtNote">Detalle (prenda / nota)</label>
-          <input type="text" id="debtNote" placeholder="Ej. 1 franela M, paga el viernes" />
+          <input type="text" id="debtNote" placeholder="Ej. Camiseta M visitante, paga el viernes" />
         </div>
       </div>
 
@@ -472,13 +488,10 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'tienda_ropa_rapida_v4';
+    const STORAGE_KEY = 'redcard_tienda_v1';
 
     const defaultData = {
-      items: [
-        { id: '1', name: 'Franela básica', size: 'M', color: 'Negro', cost: 5, price: 12, stock: 8 },
-        { id: '2', name: 'Jean clásico', size: '32', color: 'Azul', cost: 14, price: 28, stock: 3 }
-      ],
+      items: [],
       sales: [],
       debts: [],
       expenses: []
@@ -487,24 +500,51 @@
     let state = loadState();
     let cart = [];
 
+    function isStorageAvailable() {
+      try {
+        const testKey = '__redcard_test__';
+        localStorage.setItem(testKey, '1');
+        localStorage.removeItem(testKey);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    if (!isStorageAvailable()) {
+      document.getElementById('storageWarning').style.display = 'block';
+    }
+
+    function cloneDefault() {
+      return JSON.parse(JSON.stringify(defaultData));
+    }
+
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return structuredClone(defaultData);
+        if (!raw) return cloneDefault();
         const parsed = JSON.parse(raw);
         return {
-          items: Array.isArray(parsed.items) ? parsed.items : [],
+          items: Array.isArray(parsed.items) ? parsed.items.map(i => ({
+            ...i,
+            version: i.version !== undefined ? i.version : (i.color || '')
+          })) : [],
           sales: Array.isArray(parsed.sales) ? parsed.sales : [],
           debts: Array.isArray(parsed.debts) ? parsed.debts : [],
           expenses: Array.isArray(parsed.expenses) ? parsed.expenses : []
         };
       } catch {
-        return structuredClone(defaultData);
+        return cloneDefault();
       }
     }
 
     function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        document.getElementById('storageWarning').style.display = 'none';
+      } catch {
+        document.getElementById('storageWarning').style.display = 'block';
+      }
       renderAll();
     }
 
@@ -518,6 +558,16 @@
 
     function fmtMoney(n) {
       return '$' + Number(n || 0).toFixed(2);
+    }
+
+    function formatItemDescriptor(item) {
+      const ver = (item.version || '').trim();
+      return ver ? `Talla ${item.size} · ${ver}` : `Talla ${item.size}`;
+    }
+
+    function formatItemShort(item) {
+      const ver = (item.version || '').trim();
+      return ver ? `${item.size}/${ver}` : `${item.size}`;
     }
 
     function switchTab(tabName, btn) {
@@ -557,19 +607,24 @@
       const currentVal = sel.value;
       sel.innerHTML = '';
 
-      if (state.items.length === 0) {
+      // Solo muestra prendas con stock disponible (> 0)
+      const availableItems = state.items.filter(i => i.stock > 0);
+
+      if (availableItems.length === 0) {
         const opt = document.createElement('option');
-        opt.textContent = 'Agrega prendas primero en "Red Card"';
+        opt.textContent = state.items.length === 0
+          ? 'Agrega prendas primero en "Red Card"'
+          : 'Sin stock disponible (reponer en "Red Card")';
         opt.value = '';
         sel.appendChild(opt);
       } else {
-        state.items.forEach(item => {
+        availableItems.forEach(item => {
           const opt = document.createElement('option');
           opt.value = item.id;
-          opt.textContent = `${item.name} — Talla ${item.size} (${item.color}) [${item.stock} disp. · ${fmtMoney(item.price)}]`;
+          opt.textContent = `${item.name} — ${formatItemDescriptor(item)} [${item.stock} disp. · ${fmtMoney(item.price)}]`;
           sel.appendChild(opt);
         });
-        if (state.items.some(i => i.id === currentVal)) {
+        if (availableItems.some(i => i.id === currentVal)) {
           sel.value = currentVal;
         }
       }
@@ -582,8 +637,8 @@
       const qty = parseInt(document.getElementById('saleQty').value || '0', 10);
       const item = state.items.find(i => i.id === id);
 
-      if (!item || qty <= 0) {
-        msg.textContent = 'Elige una prenda y una cantidad válida.';
+      if (!item || item.stock <= 0 || qty <= 0) {
+        msg.textContent = 'Elige una prenda con stock disponible y una cantidad válida.';
         return;
       }
 
@@ -602,7 +657,7 @@
           itemId: item.id,
           name: item.name,
           size: item.size,
-          color: item.color,
+          version: item.version || '',
           price: item.price,
           cost: item.cost,
           qty
@@ -640,8 +695,8 @@
         const row = document.createElement('div');
         row.className = 'cart-item';
         row.innerHTML = `
-          <span><strong>${c.qty}x</strong> ${c.name} (${c.size}/${c.color}) — ${fmtMoney(lineTotal)}</span>
-          <button class="btn btn-outline" onclick="removeFromCart(${idx})">Quitar</button>
+          <span><strong>${c.qty}x</strong> ${c.name} (${formatItemShort(c)}) — ${fmtMoney(lineTotal)}</span>
+          <button class="btn-outline" onclick="removeFromCart(${idx})">Quitar</button>
         `;
         box.appendChild(row);
       });
@@ -660,11 +715,16 @@
         const item = state.items.find(i => i.id === id);
         if (item && qty > 0 && qty <= item.stock) {
           cart.push({
-            itemId: item.id, name: item.name, size: item.size,
-            color: item.color, price: item.price, cost: item.cost, qty
+            itemId: item.id,
+            name: item.name,
+            size: item.size,
+            version: item.version || '',
+            price: item.price,
+            cost: item.cost,
+            qty
           });
         } else {
-          msg.textContent = 'Agrega al menos una prenda a la venta.';
+          msg.textContent = 'Agrega al menos una prenda con stock disponible.';
           return;
         }
       }
@@ -684,7 +744,7 @@
         totalSale += c.price * c.qty;
         profitSale += (c.price - c.cost) * c.qty;
         totalUnits += c.qty;
-        summaryParts.push(`${c.qty}x ${c.name} (${c.size})`);
+        summaryParts.push(`${c.qty}x ${c.name} (${formatItemShort(c)})`);
       }
 
       state.sales.unshift({
@@ -704,10 +764,10 @@
       msg.textContent = `Venta guardada por ${fmtMoney(totalSale)}.`;
     }
 
-    function upsertItemData({ name, size, color, cost, price, stock }) {
+    function upsertItemData({ name, size, version, cost, price, stock }) {
       const cleanName = (name || '').trim();
       const cleanSize = (size || 'Única').trim();
-      const cleanColor = (color || 'Varios').trim();
+      const cleanVersion = (version || '').trim();
       const numCost = Number(cost) || 0;
       const numPrice = Number(price) || 0;
       const numStock = Math.max(0, parseInt(stock || '0', 10));
@@ -717,7 +777,7 @@
       const existing = state.items.find(
         i => i.name.toLowerCase() === cleanName.toLowerCase() &&
              i.size.toLowerCase() === cleanSize.toLowerCase() &&
-             i.color.toLowerCase() === cleanColor.toLowerCase()
+             (i.version || '').toLowerCase() === cleanVersion.toLowerCase()
       );
 
       if (existing) {
@@ -730,7 +790,7 @@
           id: String(Date.now() + Math.random()),
           name: cleanName,
           size: cleanSize,
-          color: cleanColor,
+          version: cleanVersion,
           cost: numCost,
           price: numPrice,
           stock: numStock
@@ -747,7 +807,7 @@
       const res = upsertItemData({
         name: document.getElementById('itemName').value,
         size: document.getElementById('itemSize').value,
-        color: document.getElementById('itemColor').value,
+        version: document.getElementById('itemVersion').value,
         cost: document.getElementById('itemCost').value,
         price: document.getElementById('itemPrice').value,
         stock: document.getElementById('itemQty').value
@@ -759,6 +819,7 @@
       }
 
       document.getElementById('itemName').value = '';
+      document.getElementById('itemVersion').value = '';
       document.getElementById('itemQty').value = '1';
       saveState();
       msg.textContent = res.action === 'updated'
@@ -780,13 +841,13 @@
       for (const line of lines) {
         const parts = line.split(',').map(p => p.trim());
         if (parts.length < 5) continue;
-        const [name, size, color, cost, price, stock = '1'] = parts;
-        const res = upsertItemData({ name, size, color, cost, price, stock });
+        const [name, size, version, cost, price, stock = '1'] = parts;
+        const res = upsertItemData({ name, size, version, cost, price, stock });
         if (res) count++;
       }
 
       if (count === 0) {
-        msg.textContent = 'Revisa el formato: Prenda, Talla, Color, Costo, Precio, Stock';
+        msg.textContent = 'Revisa el formato: Prenda, Talla, Versión, Costo, Precio, Stock';
         return;
       }
 
@@ -805,7 +866,7 @@
     function deleteItem(id) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-      const ok = confirm(`¿Borrar "${item.name}" (${item.size} · ${item.color}) de Red Card?`);
+      const ok = confirm(`¿Borrar "${item.name}" (${formatItemDescriptor(item)}) de Red Card?`);
       if (!ok) return;
 
       state.items = state.items.filter(i => i.id !== id);
@@ -902,11 +963,15 @@
       state.items.forEach(item => {
         const tr = document.createElement('tr');
         const stockClass = item.stock <= 2 ? 'low-stock' : '';
+        const stockText = item.stock === 0 ? '0 (Agotado)' : item.stock;
+        const verText = (item.version || '').trim();
+        const detailCol = verText ? `${item.size} · ${verText}` : item.size;
+
         tr.innerHTML = `
           <td><strong>${item.name}</strong></td>
-          <td>${item.size} · ${item.color}</td>
+          <td>${detailCol}</td>
           <td>${fmtMoney(item.price)}</td>
-          <td class="${stockClass}">${item.stock}</td>
+          <td class="${stockClass}">${stockText}</td>
           <td>
             <div class="action-group">
               <button class="btn-outline" onclick="restock('${item.id}', 1)">+1</button>
@@ -988,7 +1053,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `respaldo-tienda-${todayISO()}.json`;
+      a.download = `respaldo-redcard-${todayISO()}.json`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1002,7 +1067,10 @@
           const parsed = JSON.parse(reader.result);
           if (Array.isArray(parsed.items) && Array.isArray(parsed.sales)) {
             state = {
-              items: parsed.items,
+              items: parsed.items.map(i => ({
+                ...i,
+                version: i.version !== undefined ? i.version : (i.color || '')
+              })),
               sales: parsed.sales,
               debts: Array.isArray(parsed.debts) ? parsed.debts : [],
               expenses: Array.isArray(parsed.expenses) ? parsed.expenses : []
