@@ -6,14 +6,17 @@
   <title>Caja y Stock Rápido</title>
   <style>
     :root {
-      --bg: #f6f7f9;
+      --bg: #f4f7fb;
       --card: #ffffff;
-      --text: #18181b;
-      --muted: #6b7280;
-      --primary: #111827;
-      --accent: #0f766e;
-      --warn: #b45309;
-      --border: #e5e7eb;
+      --text: #0f172a;
+      --muted: #475569;
+      --blue: #1d4ed8;
+      --blue-dark: #1e3a8a;
+      --blue-soft: #eff6ff;
+      --blue-border: #bfdbfe;
+      --black: #0f172a;
+      --red: #dc2626;
+      --border: #cbd5e1;
     }
 
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
@@ -26,11 +29,16 @@
     }
 
     .app {
-      max-width: 780px;
+      max-width: 800px;
       margin: 0 auto;
     }
 
     header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--blue);
+      border-radius: 14px;
+      padding: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -39,8 +47,8 @@
       flex-wrap: wrap;
     }
 
-    h1 { font-size: 1.35rem; margin: 0; }
-    h3 { font-size: 1rem; margin: 18px 0 8px; }
+    h1 { font-size: 1.35rem; margin: 0; color: var(--black); }
+    h3 { font-size: 1rem; margin: 18px 0 8px; color: var(--black); }
     .sub { color: var(--muted); font-size: 0.88rem; }
 
     .stats {
@@ -57,8 +65,10 @@
       padding: 14px;
     }
 
-    .stat-label { font-size: 0.8rem; color: var(--muted); }
-    .stat-value { font-size: 1.35rem; font-weight: 700; margin-top: 4px; }
+    .stat-label { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+    .stat-value { font-size: 1.35rem; font-weight: 800; margin-top: 4px; color: var(--black); }
+    .stat-value.blue { color: var(--blue); }
+    .stat-value.red { color: var(--red); }
 
     .tabs {
       display: flex;
@@ -69,19 +79,20 @@
 
     .tab-btn {
       flex: 1;
-      min-width: 110px;
+      min-width: 115px;
       padding: 11px 10px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
-      font-weight: 600;
+      color: var(--black);
+      font-weight: 700;
       cursor: pointer;
     }
 
     .tab-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
+      background: var(--blue);
+      color: #ffffff;
+      border-color: var(--blue);
     }
 
     .panel {
@@ -103,17 +114,24 @@
     label {
       display: block;
       font-size: 0.84rem;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 6px;
+      color: var(--black);
     }
 
     input, select, textarea {
       width: 100%;
       padding: 10px 12px;
       border-radius: 10px;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--border);
       font-size: 0.96rem;
-      background: #fff;
+      background: #ffffff;
+      color: var(--black);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid var(--blue-border);
+      border-color: var(--blue);
     }
 
     textarea { min-height: 90px; resize: vertical; font-family: inherit; }
@@ -129,20 +147,22 @@
       margin-top: 10px;
     }
 
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-dark { background: var(--primary); color: #fff; }
+    .btn-primary { background: var(--blue); color: #ffffff; }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-dark { background: var(--black); color: #ffffff; }
     .btn-outline {
-      background: #fff;
-      color: var(--text);
-      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: var(--black);
+      border: 1px solid var(--border);
       width: auto;
       padding: 7px 11px;
       font-size: 0.82rem;
       margin-top: 0;
+      font-weight: 600;
     }
 
     .cart-box, .summary-box {
-      background: #f8fafc;
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 12px;
@@ -150,14 +170,14 @@
     }
 
     .summary-box {
-      background: #f0fdfa;
-      border-color: #99f6e4;
+      background: var(--blue-soft);
+      border-color: var(--blue-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .cart-item {
@@ -185,13 +205,15 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .low-stock { color: var(--warn); font-weight: 700; }
+    th { color: var(--black); font-weight: 700; }
+
+    .low-stock { color: var(--red); font-weight: 800; }
 
     .msg {
       margin-top: 10px;
       font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--accent);
+      font-weight: 700;
+      color: var(--blue);
       min-height: 20px;
     }
 
@@ -206,10 +228,10 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 10px 12px;
-      background: #fafafa;
+      background: #ffffff;
     }
 
-    summary { font-weight: 700; cursor: pointer; font-size: 0.92rem; }
+    summary { font-weight: 700; cursor: pointer; font-size: 0.92rem; color: var(--black); }
   </style>
 </head>
 <body>
@@ -229,30 +251,34 @@
     <div class="stats">
       <div class="stat">
         <div class="stat-label">Ingresos hoy</div>
-        <div class="stat-value" id="statToday">$0.00</div>
+        <div class="stat-value blue" id="statToday">$0.00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Ganancia estimada hoy</div>
+        <div class="stat-label">Gastos hoy</div>
+        <div class="stat-value red" id="statExpenses">$0.00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Ganancia hoy</div>
         <div class="stat-value" id="statProfit">$0.00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Por cobrar (deudas)</div>
+        <div class="stat-label">Por cobrar</div>
         <div class="stat-value" id="statDebts">$0.00</div>
       </div>
       <div class="stat">
         <div class="stat-label">Bajo stock</div>
-        <div class="stat-value" id="statLow">0</div>
+        <div class="stat-value red" id="statLow">0</div>
       </div>
     </div>
 
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('sale', this)">Anotar venta</button>
       <button class="tab-btn" onclick="switchTab('stock', this)">Stock / Prendas</button>
-      <button class="tab-btn" onclick="switchTab('debts', this)">Lo que le deben</button>
-      <button class="tab-btn" onclick="switchTab('history', this)">Ventas del día</button>
+      <button class="tab-btn" onclick="switchTab('debts', this)">Deudas y gastos</button>
+      <button class="tab-btn" onclick="switchTab('history', this)">Resumen del día</button>
     </div>
 
-    <!-- PESTAÑA 1: ANOTAR VENTA (1 O VARIAS PRENDAS) -->
+    <!-- PESTAÑA 1: ANOTAR VENTA -->
     <section id="tab-sale" class="panel active">
       <div class="grid-2">
         <div>
@@ -281,7 +307,7 @@
       <div class="msg" id="saleMsg"></div>
     </section>
 
-    <!-- PESTAÑA 2: STOCK + CARGA RÁPIDA POR LISTA -->
+    <!-- PESTAÑA 2: STOCK + CARGA RÁPIDA -->
     <section id="tab-stock" class="panel">
       <div class="grid-2">
         <div>
@@ -338,8 +364,25 @@
       </table>
     </section>
 
-    <!-- PESTAÑA 3: LO QUE LE DEBEN -->
+    <!-- PESTAÑA 3: LO QUE LE DEBEN + GASTOS DEL DÍA -->
     <section id="tab-debts" class="panel">
+      <h3>Anotar gasto del día (se resta de la ganancia de hoy)</h3>
+      <div class="grid-2">
+        <div>
+          <label for="expenseConcept">Concepto del gasto</label>
+          <input type="text" id="expenseConcept" placeholder="Ej. Pasaje / bolsas / envío" />
+        </div>
+        <div>
+          <label for="expenseAmount">Monto gastado</label>
+          <input type="number" id="expenseAmount" min="0.01" step="0.01" placeholder="0.00" />
+        </div>
+      </div>
+      <button class="btn btn-dark" onclick="addExpense()">Registrar gasto de hoy</button>
+      <div class="msg" id="expenseMsg"></div>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;" />
+
+      <h3>Anotar lo que le deben</h3>
       <div class="grid-2">
         <div>
           <label for="debtorName">Quién debe</label>
@@ -359,7 +402,7 @@
         </div>
       </div>
 
-      <button class="btn btn-dark" onclick="addDebt()">Anotar deuda pendiente</button>
+      <button class="btn btn-primary" onclick="addDebt()">Anotar deuda pendiente</button>
       <div class="msg" id="debtMsg"></div>
 
       <h3>Pendientes por cobrar</h3>
@@ -375,9 +418,9 @@
       </table>
     </section>
 
-    <!-- PESTAÑA 4: VENTAS DEL DÍA -->
+    <!-- PESTAÑA 4: RESUMEN DEL DÍA -->
     <section id="tab-history" class="panel">
-      <div class="sub">Ventas y cobros registrados hoy:</div>
+      <h3>Ventas y cobros de hoy</h3>
       <table>
         <thead>
           <tr>
@@ -389,11 +432,23 @@
         </thead>
         <tbody id="salesTable"></tbody>
       </table>
+
+      <h3>Gastos de hoy</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Concepto</th>
+            <th>Monto</th>
+          </tr>
+        </thead>
+        <tbody id="expensesTable"></tbody>
+      </table>
     </section>
   </div>
 
   <script>
-    const STORAGE_KEY = 'tienda_ropa_rapida_v2';
+    const STORAGE_KEY = 'tienda_ropa_rapida_v3';
 
     const defaultData = {
       items: [
@@ -401,7 +456,8 @@
         { id: '2', name: 'Jean clásico', size: '32', color: 'Azul', cost: 14, price: 28, stock: 3 }
       ],
       sales: [],
-      debts: []
+      debts: [],
+      expenses: []
     };
 
     let state = loadState();
@@ -415,7 +471,8 @@
         return {
           items: Array.isArray(parsed.items) ? parsed.items : [],
           sales: Array.isArray(parsed.sales) ? parsed.sales : [],
-          debts: Array.isArray(parsed.debts) ? parsed.debts : []
+          debts: Array.isArray(parsed.debts) ? parsed.debts : [],
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : []
         };
       } catch {
         return structuredClone(defaultData);
@@ -449,15 +506,21 @@
     function renderStats() {
       const today = todayISO();
       const todaySales = state.sales.filter(s => s.date === today);
+      const todayExpenses = state.expenses.filter(e => e.date === today);
+
       const incomeToday = todaySales.reduce((acc, s) => acc + s.total, 0);
-      const profitToday = todaySales.reduce((acc, s) => acc + s.profit, 0);
+      const grossProfitToday = todaySales.reduce((acc, s) => acc + s.profit, 0);
+      const expensesToday = todayExpenses.reduce((acc, e) => acc + e.amount, 0);
+      const netProfitToday = grossProfitToday - expensesToday;
+
       const totalDebts = state.debts
         .filter(d => !d.paid)
         .reduce((acc, d) => acc + d.amount, 0);
       const lowStockCount = state.items.filter(i => i.stock <= 2).length;
 
       document.getElementById('statToday').textContent = fmtMoney(incomeToday);
-      document.getElementById('statProfit').textContent = fmtMoney(profitToday);
+      document.getElementById('statExpenses').textContent = fmtMoney(expensesToday);
+      document.getElementById('statProfit').textContent = fmtMoney(netProfitToday);
       document.getElementById('statDebts').textContent = fmtMoney(totalDebts);
       document.getElementById('statLow').textContent = lowStockCount;
       document.getElementById('todayLabel').textContent = 'Hoy: ' + new Date().toLocaleDateString('es-VE', {
@@ -560,7 +623,7 @@
       });
 
       document.getElementById('cartTotal').textContent = fmtMoney(total);
-      document.getElementById('cartProfitHint').textContent = `Ganancia estimada: ${fmtMoney(profit)}`;
+      document.getElementById('cartProfitHint').textContent = `Ganancia de venta: ${fmtMoney(profit)}`;
     }
 
     function checkoutCart() {
@@ -568,7 +631,6 @@
       msg.textContent = '';
 
       if (cart.length === 0) {
-        // Atajo: si no agregaron al carrito pero pusieron cantidad > 0, agrega directo y cobra
         const id = document.getElementById('saleItem').value;
         const qty = parseInt(document.getElementById('saleQty').value || '0', 10);
         const item = state.items.find(i => i.id === id);
@@ -716,6 +778,32 @@
       saveState();
     }
 
+    function addExpense() {
+      const msg = document.getElementById('expenseMsg');
+      msg.textContent = '';
+
+      const concept = document.getElementById('expenseConcept').value.trim();
+      const amount = parseFloat(document.getElementById('expenseAmount').value || '0');
+
+      if (!concept || amount <= 0) {
+        msg.textContent = 'Escribe un concepto y un monto mayor a 0.';
+        return;
+      }
+
+      state.expenses.unshift({
+        id: String(Date.now()),
+        date: todayISO(),
+        time: nowTime(),
+        concept,
+        amount
+      });
+
+      document.getElementById('expenseConcept').value = '';
+      document.getElementById('expenseAmount').value = '';
+      saveState();
+      msg.textContent = `Gasto anotado: ${concept} (${fmtMoney(amount)}).`;
+    }
+
     function addDebt() {
       const msg = document.getElementById('debtMsg');
       msg.textContent = '';
@@ -829,6 +917,27 @@
       });
     }
 
+    function renderExpensesTable() {
+      const tbody = document.getElementById('expensesTable');
+      tbody.innerHTML = '';
+      const todayExpenses = state.expenses.filter(e => e.date === todayISO());
+
+      if (todayExpenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="sub">Sin gastos anotados hoy.</td></tr>';
+        return;
+      }
+
+      todayExpenses.forEach(e => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${e.time}</td>
+          <td>${e.concept}</td>
+          <td><strong class="low-stock">${fmtMoney(e.amount)}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
     function exportData() {
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -850,7 +959,8 @@
             state = {
               items: parsed.items,
               sales: parsed.sales,
-              debts: Array.isArray(parsed.debts) ? parsed.debts : []
+              debts: Array.isArray(parsed.debts) ? parsed.debts : [],
+              expenses: Array.isArray(parsed.expenses) ? parsed.expenses : []
             };
             saveState();
             alert('Copia recuperada correctamente.');
@@ -871,6 +981,7 @@
       renderStockTable();
       renderDebtsTable();
       renderSalesTable();
+      renderExpensesTable();
     }
 
     renderAll();
