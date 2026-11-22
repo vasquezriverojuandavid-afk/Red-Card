@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Caja y Stock Rápido</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #18181b;
+      --muted: #6b7280;
+      --primary: #111827;
+      --accent: #0f766e;
+      --warn: #b45309;
+      --border: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 { font-size: 1.35rem; margin: 0; }
+    .sub { color: var(--muted); font-size: 0.9rem; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .stat-label { font-size: 0.8rem; color: var(--muted); }
+    .stat-value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .panel {
+      display: none;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .panel.active { display: block; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 1rem;
+      background: #fff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 13px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-dark { background: var(--primary); color: #fff; }
+    .btn-outline {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid #d1d5db;
+      width: auto;
+      padding: 9px 12px;
+      font-size: 0.85rem;
+      margin-top: 0;
+    }
+
+    .summary-box {
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 0.92rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .low-stock { color: var(--warn); font-weight: 700; }
+
+    .msg {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      min-height: 20px;
+    }
+
+    .backup-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Tienda — Ventas y Stock</h1>
+        <div class="sub" id="todayLabel"></div>
+      </div>
+      <div class="backup-row" style="margin-top:0; padding-top:0; border:none;">
+        <button class="btn btn-outline" onclick="exportData()">Guardar copia</button>
+        <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">Recuperar copia</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
+      </div>
+    </header>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Ingresos hoy</div>
+        <div class="stat-value" id="statToday">$0.00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Ganancia estimada hoy</div>
+        <div class="stat-value" id="statProfit">$0.00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Prendas con bajo stock</div>
+        <div class="stat-value" id="statLow">0</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('sale', this)">Anotar venta</button>
+      <button class="tab-btn" onclick="switchTab('stock', this)">Stock / Prendas</button>
+      <button class="tab-btn" onclick="switchTab('history', this)">Ventas del día</button>
+    </div>
+
+    <!-- PESTAÑA 1: ANOTAR VENTA -->
+    <section id="tab-sale" class="panel active">
+      <div class="grid-2">
+        <div>
+          <label for="saleItem">Prenda / Talla / Color</label>
+          <select id="saleItem" onchange="updateSalePreview()"></select>
+        </div>
+        <div>
+          <label for="saleQty">Cantidad</label>
+          <input type="number" id="saleQty" min="1" value="1" oninput="updateSalePreview()" />
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <span>Total a cobrar: <strong id="saleTotal">$0.00</strong></span>
+        <span class="sub" id="saleStockHint"></span>
+      </div>
+
+      <button class="btn btn-primary" onclick="registerSale()">Guardar venta</button>
+      <div class="msg" id="saleMsg"></div>
+    </section>
+
+    <!-- PESTAÑA 2: STOCK / PRENDAS -->
+    <section id="tab-stock" class="panel">
+      <div class="grid-2">
+        <div>
+          <label for="itemName">Prenda</label>
+          <input type="text" id="itemName" placeholder="Ej. Franela básica" />
+        </div>
+        <div>
+          <label for="itemSize">Talla</label>
+          <input type="text" id="itemSize" placeholder="Ej. M" />
+        </div>
+        <div>
+          <label for="itemColor">Color</label>
+          <input type="text" id="itemColor" placeholder="Ej. Negro" />
+        </div>
+        <div>
+          <label for="itemCost">Costo unitario</label>
+          <input type="number" id="itemCost" min="0" step="0.01" placeholder="0.00" />
+        </div>
+        <div>
+          <label for="itemPrice">Precio de venta</label>
+          <input type="number" id="itemPrice" min="0" step="0.01" placeholder="0.00" />
+        </div>
+        <div>
+          <label for="itemQty">Unidades en stock</label>
+          <input type="number" id="itemQty" min="0" value="1" />
+        </div>
+      </div>
+
+      <button class="btn btn-dark" onclick="addOrUpdateItem()">Guardar en inventario</button>
+      <div class="msg" id="stockMsg"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Prenda</th>
+            <th>Talla / Color</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Reposición</th>
+          </tr>
+        </thead>
+        <tbody id="stockTable"></tbody>
+      </table>
+    </section>
+
+    <!-- PESTAÑA 3: VENTAS DEL DÍA -->
+    <section id="tab-history" class="panel">
+      <div class="sub">Ventas registradas hoy:</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Prenda</th>
+            <th>Cant.</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="salesTable"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'tienda_ropa_rapida_v1';
+
+    const defaultData = {
+      items: [
+        { id: '1', name: 'Franela básica', size: 'M', color: 'Negro', cost: 5, price: 12, stock: 8 },
+        { id: '2', name: 'Jean clásico', size: '32', color: 'Azul', cost: 14, price: 28, stock: 3 }
+      ],
+      sales: []
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(defaultData);
+        const parsed = JSON.parse(raw);
+        return {
+          items: Array.isArray(parsed.items) ? parsed.items : [],
+          sales: Array.isArray(parsed.sales) ? parsed.sales : []
+        };
+      } catch {
+        return structuredClone(defaultData);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+    }
+
+    function todayISO() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function fmtMoney(n) {
+      return '$' + Number(n || 0).toFixed(2);
+    }
+
+    function switchTab(tabName, btn) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function renderStats() {
+      const today = todayISO();
+      const todaySales = state.sales.filter(s => s.date === today);
+      const incomeToday = todaySales.reduce((acc, s) => acc + s.total, 0);
+      const profitToday = todaySales.reduce((acc, s) => acc + s.profit, 0);
+      const lowStockCount = state.items.filter(i => i.stock <= 2).length;
+
+      document.getElementById('statToday').textContent = fmtMoney(incomeToday);
+      document.getElementById('statProfit').textContent = fmtMoney(profitToday);
+      document.getElementById('statLow').textContent = lowStockCount;
+      document.getElementById('todayLabel').textContent = 'Hoy: ' + new Date().toLocaleDateString('es-VE', {
+        weekday: 'long', day: 'numeric', month: 'short'
+      });
+    }
+
+    function renderSaleSelect() {
+      const sel = document.getElementById('saleItem');
+      const currentVal = sel.value;
+      sel.innerHTML = '';
+
+      if (state.items.length === 0) {
+        const opt = document.createElement('option');
+        opt.textContent = 'Agrega prendas primero en "Stock / Prendas"';
+        opt.value = '';
+        sel.appendChild(opt);
+      } else {
+        state.items.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.id;
+          opt.textContent = `${item.name} — Talla ${item.size} (${item.color}) [${item.stock} disp.]`;
+          sel.appendChild(opt);
+        });
+        if (state.items.some(i => i.id === currentVal)) {
+          sel.value = currentVal;
+        }
+      }
+      updateSalePreview();
+    }
+
+    function updateSalePreview() {
+      const id = document.getElementById('saleItem').value;
+      const qty = Math.max(1, parseInt(document.getElementById('saleQty').value || '1', 10));
+      const item = state.items.find(i => i.id === id);
+
+      if (!item) {
+        document.getElementById('saleTotal').textContent = '$0.00';
+        document.getElementById('saleStockHint').textContent = '';
+        return;
+      }
+
+      document.getElementById('saleTotal').textContent = fmtMoney(item.price * qty);
+      document.getElementById('saleStockHint').textContent = `Disponible: ${item.stock} · Precio u.: ${fmtMoney(item.price)}`;
+    }
+
+    function registerSale() {
+      const msg = document.getElementById('saleMsg');
+      msg.textContent = '';
+      const id = document.getElementById('saleItem').value;
+      const qty = parseInt(document.getElementById('saleQty').value || '0', 10);
+      const item = state.items.find(i => i.id === id);
+
+      if (!item || qty <= 0) {
+        msg.textContent = 'Selecciona una prenda y una cantidad válida.';
+        return;
+      }
+
+      if (qty > item.stock) {
+        msg.textContent = `Solo quedan ${item.stock} unidades en stock.`;
+        return;
+      }
+
+      item.stock -= qty;
+      const total = item.price * qty;
+      const profit = (item.price - item.cost) * qty;
+
+      state.sales.unshift({
+        id: String(Date.now()),
+        date: todayISO(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        label: `${item.name} (${item.size}/${item.color})`,
+        qty,
+        total,
+        profit
+      });
+
+      document.getElementById('saleQty').value = 1;
+      saveState();
+      msg.textContent = `Venta guardada: ${qty} x ${item.name} (${fmtMoney(total)}).`;
+    }
+
+    function addOrUpdateItem() {
+      const msg = document.getElementById('stockMsg');
+      msg.textContent = '';
+
+      const name = document.getElementById('itemName').value.trim();
+      const size = (document.getElementById('itemSize').value.trim() || 'Única');
+      const color = (document.getElementById('itemColor').value.trim() || 'Varios');
+      const cost = parseFloat(document.getElementById('itemCost').value || '0');
+      const price = parseFloat(document.getElementById('itemPrice').value || '0');
+      const stock = parseInt(document.getElementById('itemQty').value || '0', 10);
+
+      if (!name || price <= 0 || stock < 0) {
+        msg.textContent = 'Completa al menos prenda, precio de venta y stock.';
+        return;
+      }
+
+      const existing = state.items.find(
+        i => i.name.toLowerCase() === name.toLowerCase() &&
+             i.size.toLowerCase() === size.toLowerCase() &&
+             i.color.toLowerCase() === color.toLowerCase()
+      );
+
+      if (existing) {
+        existing.stock += stock;
+        existing.cost = cost || existing.cost;
+        existing.price = price;
+        msg.textContent = `Stock sumado a ${existing.name} (${existing.size}).`;
+      } else {
+        state.items.push({
+          id: String(Date.now()),
+          name, size, color, cost, price, stock
+        });
+        msg.textContent = `Prenda "${name}" agregada.`;
+      }
+
+      document.getElementById('itemName').value = '';
+      document.getElementById('itemQty').value = '1';
+      saveState();
+    }
+
+    function restock(id, delta) {
+      const item = state.items.find(i => i.id === id);
+      if (!item) return;
+      item.stock = Math.max(0, item.stock + delta);
+      saveState();
+    }
+
+    function renderStockTable() {
+      const tbody = document.getElementById('stockTable');
+      tbody.innerHTML = '';
+
+      state.items.forEach(item => {
+        const tr = document.createElement('tr');
+        const stockClass = item.stock <= 2 ? 'low-stock' : '';
+        tr.innerHTML = `
+          <td><strong>${item.name}</strong></td>
+          <td>${item.size} · ${item.color}</td>
+          <td>${fmtMoney(item.price)}</td>
+          <td class="${stockClass}">${item.stock}</td>
+          <td>
+            <button class="btn btn-outline" onclick="restock('${item.id}', 1)">+1</button>
+            <button class="btn btn-outline" onclick="restock('${item.id}', 5)">+5</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderSalesTable() {
+      const tbody = document.getElementById('salesTable');
+      tbody.innerHTML = '';
+      const todaySales = state.sales.filter(s => s.date === todayISO());
+
+      if (todaySales.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="sub">Aún no hay ventas hoy.</td></tr>';
+        return;
+      }
+
+      todaySales.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${s.time}</td>
+          <td>${s.label}</td>
+          <td>${s.qty}</td>
+          <td><strong>${fmtMoney(s.total)}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `respaldo-tienda-${todayISO()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (Array.isArray(parsed.items) && Array.isArray(parsed.sales)) {
+            state = parsed;
+            saveState();
+            alert('Copia recuperada correctamente.');
+          } else {
+            alert('El archivo no tiene el formato esperado.');
+          }
+        } catch {
+          alert('No se pudo leer el archivo.');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function renderAll() {
+      renderStats();
+      renderSaleSelect();
+      renderStockTable();
+      renderSalesTable();
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
