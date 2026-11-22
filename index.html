@@ -26,7 +26,7 @@
     }
 
     .app {
-      max-width: 720px;
+      max-width: 780px;
       margin: 0 auto;
     }
 
@@ -40,7 +40,8 @@
     }
 
     h1 { font-size: 1.35rem; margin: 0; }
-    .sub { color: var(--muted); font-size: 0.9rem; }
+    h3 { font-size: 1rem; margin: 18px 0 8px; }
+    .sub { color: var(--muted); font-size: 0.88rem; }
 
     .stats {
       display: grid;
@@ -57,17 +58,19 @@
     }
 
     .stat-label { font-size: 0.8rem; color: var(--muted); }
-    .stat-value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+    .stat-value { font-size: 1.35rem; font-weight: 700; margin-top: 4px; }
 
     .tabs {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       margin-bottom: 16px;
+      flex-wrap: wrap;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 12px;
+      min-width: 110px;
+      padding: 11px 10px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--card);
@@ -93,35 +96,37 @@
 
     .grid-2 {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 12px;
     }
 
     label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       font-weight: 600;
       margin-bottom: 6px;
     }
 
-    input, select {
+    input, select, textarea {
       width: 100%;
-      padding: 11px 12px;
+      padding: 10px 12px;
       border-radius: 10px;
       border: 1px solid #d1d5db;
-      font-size: 1rem;
+      font-size: 0.96rem;
       background: #fff;
     }
 
+    textarea { min-height: 90px; resize: vertical; font-family: inherit; }
+
     .btn {
       width: 100%;
-      padding: 13px 16px;
+      padding: 12px 15px;
       border: none;
       border-radius: 10px;
-      font-size: 1rem;
+      font-size: 0.98rem;
       font-weight: 700;
       cursor: pointer;
-      margin-top: 12px;
+      margin-top: 10px;
     }
 
     .btn-primary { background: var(--accent); color: #fff; }
@@ -131,33 +136,52 @@
       color: var(--text);
       border: 1px solid #d1d5db;
       width: auto;
-      padding: 9px 12px;
-      font-size: 0.85rem;
+      padding: 7px 11px;
+      font-size: 0.82rem;
       margin-top: 0;
+    }
+
+    .cart-box, .summary-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
     }
 
     .summary-box {
       background: #f0fdfa;
-      border: 1px solid #99f6e4;
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 12px;
+      border-color: #99f6e4;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
       font-weight: 600;
     }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 0.9rem;
+    }
+
+    .cart-item:last-child { border-bottom: none; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 14px;
-      font-size: 0.92rem;
+      margin-top: 12px;
+      font-size: 0.9rem;
     }
 
     th, td {
       text-align: left;
-      padding: 10px 8px;
+      padding: 9px 7px;
       border-bottom: 1px solid var(--border);
     }
 
@@ -165,7 +189,7 @@
 
     .msg {
       margin-top: 10px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: var(--accent);
       min-height: 20px;
@@ -175,10 +199,17 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-top: 16px;
-      padding-top: 14px;
-      border-top: 1px solid var(--border);
     }
+
+    details {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fafafa;
+    }
+
+    summary { font-weight: 700; cursor: pointer; font-size: 0.92rem; }
   </style>
 </head>
 <body>
@@ -188,7 +219,7 @@
         <h1>Tienda — Ventas y Stock</h1>
         <div class="sub" id="todayLabel"></div>
       </div>
-      <div class="backup-row" style="margin-top:0; padding-top:0; border:none;">
+      <div class="backup-row">
         <button class="btn btn-outline" onclick="exportData()">Guardar copia</button>
         <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">Recuperar copia</button>
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
@@ -205,7 +236,11 @@
         <div class="stat-value" id="statProfit">$0.00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Prendas con bajo stock</div>
+        <div class="stat-label">Por cobrar (deudas)</div>
+        <div class="stat-value" id="statDebts">$0.00</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Bajo stock</div>
         <div class="stat-value" id="statLow">0</div>
       </div>
     </div>
@@ -213,32 +248,40 @@
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('sale', this)">Anotar venta</button>
       <button class="tab-btn" onclick="switchTab('stock', this)">Stock / Prendas</button>
+      <button class="tab-btn" onclick="switchTab('debts', this)">Lo que le deben</button>
       <button class="tab-btn" onclick="switchTab('history', this)">Ventas del día</button>
     </div>
 
-    <!-- PESTAÑA 1: ANOTAR VENTA -->
+    <!-- PESTAÑA 1: ANOTAR VENTA (1 O VARIAS PRENDAS) -->
     <section id="tab-sale" class="panel active">
       <div class="grid-2">
         <div>
           <label for="saleItem">Prenda / Talla / Color</label>
-          <select id="saleItem" onchange="updateSalePreview()"></select>
+          <select id="saleItem"></select>
         </div>
         <div>
           <label for="saleQty">Cantidad</label>
-          <input type="number" id="saleQty" min="1" value="1" oninput="updateSalePreview()" />
+          <input type="number" id="saleQty" min="1" value="1" />
         </div>
       </div>
 
-      <div class="summary-box">
-        <span>Total a cobrar: <strong id="saleTotal">$0.00</strong></span>
-        <span class="sub" id="saleStockHint"></span>
+      <button class="btn btn-dark" onclick="addToCart()">+ Agregar a la venta actual</button>
+
+      <div class="cart-box">
+        <div class="sub"><strong>Prendas en esta venta:</strong></div>
+        <div id="cartList" class="sub" style="margin-top:6px;">Aún no has agregado prendas.</div>
       </div>
 
-      <button class="btn btn-primary" onclick="registerSale()">Guardar venta</button>
+      <div class="summary-box">
+        <span>Total de la venta: <strong id="cartTotal">$0.00</strong></span>
+        <span class="sub" id="cartProfitHint"></span>
+      </div>
+
+      <button class="btn btn-primary" onclick="checkoutCart()">Guardar venta</button>
       <div class="msg" id="saleMsg"></div>
     </section>
 
-    <!-- PESTAÑA 2: STOCK / PRENDAS -->
+    <!-- PESTAÑA 2: STOCK + CARGA RÁPIDA POR LISTA -->
     <section id="tab-stock" class="panel">
       <div class="grid-2">
         <div>
@@ -267,9 +310,20 @@
         </div>
       </div>
 
-      <button class="btn btn-dark" onclick="addOrUpdateItem()">Guardar en inventario</button>
+      <button class="btn btn-dark" onclick="addOrUpdateItem()">Guardar prenda</button>
       <div class="msg" id="stockMsg"></div>
 
+      <details>
+        <summary>Carga rápida por lista (varias prendas a la vez)</summary>
+        <p class="sub" style="margin:8px 0;">
+          Escribe una prenda por línea con este orden:<br />
+          <code>Prenda, Talla, Color, Costo, Precio, Stock</code>
+        </p>
+        <textarea id="bulkInput" placeholder="Franela básica, M, Negro, 5, 12, 10&#10;Jean clásico, 32, Azul, 14, 28, 5"></textarea>
+        <button class="btn btn-dark" onclick="bulkImportItems()">Cargar lista completa</button>
+      </details>
+
+      <h3>Inventario actual</h3>
       <table>
         <thead>
           <tr>
@@ -277,21 +331,58 @@
             <th>Talla / Color</th>
             <th>Precio</th>
             <th>Stock</th>
-            <th>Reposición</th>
+            <th>Reponer</th>
           </tr>
         </thead>
         <tbody id="stockTable"></tbody>
       </table>
     </section>
 
-    <!-- PESTAÑA 3: VENTAS DEL DÍA -->
+    <!-- PESTAÑA 3: LO QUE LE DEBEN -->
+    <section id="tab-debts" class="panel">
+      <div class="grid-2">
+        <div>
+          <label for="debtorName">Quién debe</label>
+          <input type="text" id="debtorName" placeholder="Ej. Carlos Pérez" />
+        </div>
+        <div>
+          <label for="debtAmount">Monto pendiente</label>
+          <input type="number" id="debtAmount" min="0.01" step="0.01" placeholder="0.00" />
+        </div>
+        <div>
+          <label for="debtProfit">Ganancia estimada al cobrar (opcional)</label>
+          <input type="number" id="debtProfit" min="0" step="0.01" placeholder="0.00" />
+        </div>
+        <div>
+          <label for="debtNote">Detalle (prenda / nota)</label>
+          <input type="text" id="debtNote" placeholder="Ej. 1 franela M, paga el viernes" />
+        </div>
+      </div>
+
+      <button class="btn btn-dark" onclick="addDebt()">Anotar deuda pendiente</button>
+      <div class="msg" id="debtMsg"></div>
+
+      <h3>Pendientes por cobrar</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Persona / Detalle</th>
+            <th>Monto</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="debtsTable"></tbody>
+      </table>
+    </section>
+
+    <!-- PESTAÑA 4: VENTAS DEL DÍA -->
     <section id="tab-history" class="panel">
-      <div class="sub">Ventas registradas hoy:</div>
+      <div class="sub">Ventas y cobros registrados hoy:</div>
       <table>
         <thead>
           <tr>
             <th>Hora</th>
-            <th>Prenda</th>
+            <th>Detalle</th>
             <th>Cant.</th>
             <th>Total</th>
           </tr>
@@ -302,17 +393,19 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'tienda_ropa_rapida_v1';
+    const STORAGE_KEY = 'tienda_ropa_rapida_v2';
 
     const defaultData = {
       items: [
         { id: '1', name: 'Franela básica', size: 'M', color: 'Negro', cost: 5, price: 12, stock: 8 },
         { id: '2', name: 'Jean clásico', size: '32', color: 'Azul', cost: 14, price: 28, stock: 3 }
       ],
-      sales: []
+      sales: [],
+      debts: []
     };
 
     let state = loadState();
+    let cart = [];
 
     function loadState() {
       try {
@@ -321,7 +414,8 @@
         const parsed = JSON.parse(raw);
         return {
           items: Array.isArray(parsed.items) ? parsed.items : [],
-          sales: Array.isArray(parsed.sales) ? parsed.sales : []
+          sales: Array.isArray(parsed.sales) ? parsed.sales : [],
+          debts: Array.isArray(parsed.debts) ? parsed.debts : []
         };
       } catch {
         return structuredClone(defaultData);
@@ -335,6 +429,10 @@
 
     function todayISO() {
       return new Date().toISOString().slice(0, 10);
+    }
+
+    function nowTime() {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
     function fmtMoney(n) {
@@ -353,10 +451,14 @@
       const todaySales = state.sales.filter(s => s.date === today);
       const incomeToday = todaySales.reduce((acc, s) => acc + s.total, 0);
       const profitToday = todaySales.reduce((acc, s) => acc + s.profit, 0);
+      const totalDebts = state.debts
+        .filter(d => !d.paid)
+        .reduce((acc, d) => acc + d.amount, 0);
       const lowStockCount = state.items.filter(i => i.stock <= 2).length;
 
       document.getElementById('statToday').textContent = fmtMoney(incomeToday);
       document.getElementById('statProfit').textContent = fmtMoney(profitToday);
+      document.getElementById('statDebts').textContent = fmtMoney(totalDebts);
       document.getElementById('statLow').textContent = lowStockCount;
       document.getElementById('todayLabel').textContent = 'Hoy: ' + new Date().toLocaleDateString('es-VE', {
         weekday: 'long', day: 'numeric', month: 'short'
@@ -377,32 +479,16 @@
         state.items.forEach(item => {
           const opt = document.createElement('option');
           opt.value = item.id;
-          opt.textContent = `${item.name} — Talla ${item.size} (${item.color}) [${item.stock} disp.]`;
+          opt.textContent = `${item.name} — Talla ${item.size} (${item.color}) [${item.stock} disp. · ${fmtMoney(item.price)}]`;
           sel.appendChild(opt);
         });
         if (state.items.some(i => i.id === currentVal)) {
           sel.value = currentVal;
         }
       }
-      updateSalePreview();
     }
 
-    function updateSalePreview() {
-      const id = document.getElementById('saleItem').value;
-      const qty = Math.max(1, parseInt(document.getElementById('saleQty').value || '1', 10));
-      const item = state.items.find(i => i.id === id);
-
-      if (!item) {
-        document.getElementById('saleTotal').textContent = '$0.00';
-        document.getElementById('saleStockHint').textContent = '';
-        return;
-      }
-
-      document.getElementById('saleTotal').textContent = fmtMoney(item.price * qty);
-      document.getElementById('saleStockHint').textContent = `Disponible: ${item.stock} · Precio u.: ${fmtMoney(item.price)}`;
-    }
-
-    function registerSale() {
+    function addToCart() {
       const msg = document.getElementById('saleMsg');
       msg.textContent = '';
       const id = document.getElementById('saleItem').value;
@@ -410,78 +496,272 @@
       const item = state.items.find(i => i.id === id);
 
       if (!item || qty <= 0) {
-        msg.textContent = 'Selecciona una prenda y una cantidad válida.';
+        msg.textContent = 'Elige una prenda y una cantidad válida.';
         return;
       }
 
-      if (qty > item.stock) {
-        msg.textContent = `Solo quedan ${item.stock} unidades en stock.`;
+      const alreadyInCart = cart.find(c => c.itemId === item.id);
+      const currentQty = alreadyInCart ? alreadyInCart.qty : 0;
+
+      if (currentQty + qty > item.stock) {
+        msg.textContent = `No hay suficiente stock (disponible: ${item.stock}).`;
         return;
       }
 
-      item.stock -= qty;
-      const total = item.price * qty;
-      const profit = (item.price - item.cost) * qty;
+      if (alreadyInCart) {
+        alreadyInCart.qty += qty;
+      } else {
+        cart.push({
+          itemId: item.id,
+          name: item.name,
+          size: item.size,
+          color: item.color,
+          price: item.price,
+          cost: item.cost,
+          qty
+        });
+      }
+
+      document.getElementById('saleQty').value = 1;
+      renderCart();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      renderCart();
+    }
+
+    function renderCart() {
+      const box = document.getElementById('cartList');
+      if (cart.length === 0) {
+        box.innerHTML = 'Aún no has agregado prendas.';
+        document.getElementById('cartTotal').textContent = '$0.00';
+        document.getElementById('cartProfitHint').textContent = '';
+        return;
+      }
+
+      box.innerHTML = '';
+      let total = 0;
+      let profit = 0;
+
+      cart.forEach((c, idx) => {
+        const lineTotal = c.price * c.qty;
+        const lineProfit = (c.price - c.cost) * c.qty;
+        total += lineTotal;
+        profit += lineProfit;
+
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+          <span><strong>${c.qty}x</strong> ${c.name} (${c.size}/${c.color}) — ${fmtMoney(lineTotal)}</span>
+          <button class="btn btn-outline" onclick="removeFromCart(${idx})">Quitar</button>
+        `;
+        box.appendChild(row);
+      });
+
+      document.getElementById('cartTotal').textContent = fmtMoney(total);
+      document.getElementById('cartProfitHint').textContent = `Ganancia estimada: ${fmtMoney(profit)}`;
+    }
+
+    function checkoutCart() {
+      const msg = document.getElementById('saleMsg');
+      msg.textContent = '';
+
+      if (cart.length === 0) {
+        // Atajo: si no agregaron al carrito pero pusieron cantidad > 0, agrega directo y cobra
+        const id = document.getElementById('saleItem').value;
+        const qty = parseInt(document.getElementById('saleQty').value || '0', 10);
+        const item = state.items.find(i => i.id === id);
+        if (item && qty > 0 && qty <= item.stock) {
+          cart.push({
+            itemId: item.id, name: item.name, size: item.size,
+            color: item.color, price: item.price, cost: item.cost, qty
+          });
+        } else {
+          msg.textContent = 'Agrega al menos una prenda a la venta.';
+          return;
+        }
+      }
+
+      let totalSale = 0;
+      let profitSale = 0;
+      let totalUnits = 0;
+      const summaryParts = [];
+
+      for (const c of cart) {
+        const item = state.items.find(i => i.id === c.itemId);
+        if (!item || c.qty > item.stock) {
+          msg.textContent = `Revisa el stock de ${c.name}.`;
+          return;
+        }
+        item.stock -= c.qty;
+        totalSale += c.price * c.qty;
+        profitSale += (c.price - c.cost) * c.qty;
+        totalUnits += c.qty;
+        summaryParts.push(`${c.qty}x ${c.name} (${c.size})`);
+      }
 
       state.sales.unshift({
         id: String(Date.now()),
         date: todayISO(),
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        label: `${item.name} (${item.size}/${item.color})`,
-        qty,
-        total,
-        profit
+        time: nowTime(),
+        label: summaryParts.join(', '),
+        qty: totalUnits,
+        total: totalSale,
+        profit: profitSale
       });
 
+      cart = [];
       document.getElementById('saleQty').value = 1;
       saveState();
-      msg.textContent = `Venta guardada: ${qty} x ${item.name} (${fmtMoney(total)}).`;
+      renderCart();
+      msg.textContent = `Venta guardada por ${fmtMoney(totalSale)}.`;
+    }
+
+    function upsertItemData({ name, size, color, cost, price, stock }) {
+      const cleanName = (name || '').trim();
+      const cleanSize = (size || 'Única').trim();
+      const cleanColor = (color || 'Varios').trim();
+      const numCost = Number(cost) || 0;
+      const numPrice = Number(price) || 0;
+      const numStock = Math.max(0, parseInt(stock || '0', 10));
+
+      if (!cleanName || numPrice <= 0) return null;
+
+      const existing = state.items.find(
+        i => i.name.toLowerCase() === cleanName.toLowerCase() &&
+             i.size.toLowerCase() === cleanSize.toLowerCase() &&
+             i.color.toLowerCase() === cleanColor.toLowerCase()
+      );
+
+      if (existing) {
+        existing.stock += numStock;
+        if (numCost > 0) existing.cost = numCost;
+        existing.price = numPrice;
+        return { action: 'updated', item: existing };
+      } else {
+        const newItem = {
+          id: String(Date.now() + Math.random()),
+          name: cleanName,
+          size: cleanSize,
+          color: cleanColor,
+          cost: numCost,
+          price: numPrice,
+          stock: numStock
+        };
+        state.items.push(newItem);
+        return { action: 'added', item: newItem };
+      }
     }
 
     function addOrUpdateItem() {
       const msg = document.getElementById('stockMsg');
       msg.textContent = '';
 
-      const name = document.getElementById('itemName').value.trim();
-      const size = (document.getElementById('itemSize').value.trim() || 'Única');
-      const color = (document.getElementById('itemColor').value.trim() || 'Varios');
-      const cost = parseFloat(document.getElementById('itemCost').value || '0');
-      const price = parseFloat(document.getElementById('itemPrice').value || '0');
-      const stock = parseInt(document.getElementById('itemQty').value || '0', 10);
+      const res = upsertItemData({
+        name: document.getElementById('itemName').value,
+        size: document.getElementById('itemSize').value,
+        color: document.getElementById('itemColor').value,
+        cost: document.getElementById('itemCost').value,
+        price: document.getElementById('itemPrice').value,
+        stock: document.getElementById('itemQty').value
+      });
 
-      if (!name || price <= 0 || stock < 0) {
-        msg.textContent = 'Completa al menos prenda, precio de venta y stock.';
+      if (!res) {
+        msg.textContent = 'Completa prenda y un precio de venta mayor a 0.';
         return;
-      }
-
-      const existing = state.items.find(
-        i => i.name.toLowerCase() === name.toLowerCase() &&
-             i.size.toLowerCase() === size.toLowerCase() &&
-             i.color.toLowerCase() === color.toLowerCase()
-      );
-
-      if (existing) {
-        existing.stock += stock;
-        existing.cost = cost || existing.cost;
-        existing.price = price;
-        msg.textContent = `Stock sumado a ${existing.name} (${existing.size}).`;
-      } else {
-        state.items.push({
-          id: String(Date.now()),
-          name, size, color, cost, price, stock
-        });
-        msg.textContent = `Prenda "${name}" agregada.`;
       }
 
       document.getElementById('itemName').value = '';
       document.getElementById('itemQty').value = '1';
       saveState();
+      msg.textContent = res.action === 'updated'
+        ? `Stock actualizado para ${res.item.name}.`
+        : `Prenda "${res.item.name}" guardada.`;
+    }
+
+    function bulkImportItems() {
+      const msg = document.getElementById('stockMsg');
+      const raw = document.getElementById('bulkInput').value;
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+
+      if (lines.length === 0) {
+        msg.textContent = 'Pega al menos una línea para cargar.';
+        return;
+      }
+
+      let count = 0;
+      for (const line of lines) {
+        const parts = line.split(',').map(p => p.trim());
+        if (parts.length < 5) continue;
+        const [name, size, color, cost, price, stock = '1'] = parts;
+        const res = upsertItemData({ name, size, color, cost, price, stock });
+        if (res) count++;
+      }
+
+      if (count === 0) {
+        msg.textContent = 'Revisa el formato: Prenda, Talla, Color, Costo, Precio, Stock';
+        return;
+      }
+
+      document.getElementById('bulkInput').value = '';
+      saveState();
+      msg.textContent = `Se procesaron ${count} prenda(s) de la lista.`;
     }
 
     function restock(id, delta) {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
       item.stock = Math.max(0, item.stock + delta);
+      saveState();
+    }
+
+    function addDebt() {
+      const msg = document.getElementById('debtMsg');
+      msg.textContent = '';
+
+      const debtor = document.getElementById('debtorName').value.trim();
+      const amount = parseFloat(document.getElementById('debtAmount').value || '0');
+      const profit = parseFloat(document.getElementById('debtProfit').value || '0');
+      const note = document.getElementById('debtNote').value.trim();
+
+      if (!debtor || amount <= 0) {
+        msg.textContent = 'Escribe quién debe y un monto mayor a 0.';
+        return;
+      }
+
+      state.debts.unshift({
+        id: String(Date.now()),
+        debtor,
+        amount,
+        profit: Math.max(0, profit),
+        note,
+        paid: false
+      });
+
+      document.getElementById('debtorName').value = '';
+      document.getElementById('debtAmount').value = '';
+      document.getElementById('debtProfit').value = '';
+      document.getElementById('debtNote').value = '';
+      saveState();
+      msg.textContent = `Anotado lo que debe ${debtor} (${fmtMoney(amount)}).`;
+    }
+
+    function markDebtPaid(id) {
+      const debt = state.debts.find(d => d.id === id);
+      if (!debt || debt.paid) return;
+
+      debt.paid = true;
+      state.sales.unshift({
+        id: String(Date.now()),
+        date: todayISO(),
+        time: nowTime(),
+        label: `Cobro deuda: ${debt.debtor}${debt.note ? ' (' + debt.note + ')' : ''}`,
+        qty: 1,
+        total: debt.amount,
+        profit: debt.profit || 0
+      });
+
       saveState();
     }
 
@@ -501,6 +781,27 @@
             <button class="btn btn-outline" onclick="restock('${item.id}', 1)">+1</button>
             <button class="btn btn-outline" onclick="restock('${item.id}', 5)">+5</button>
           </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderDebtsTable() {
+      const tbody = document.getElementById('debtsTable');
+      tbody.innerHTML = '';
+      const pending = state.debts.filter(d => !d.paid);
+
+      if (pending.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="sub">No hay deudas pendientes por cobrar.</td></tr>';
+        return;
+      }
+
+      pending.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${d.debtor}</strong>${d.note ? '<div class="sub">' + d.note + '</div>' : ''}</td>
+          <td><strong>${fmtMoney(d.amount)}</strong></td>
+          <td><button class="btn btn-outline" onclick="markDebtPaid('${d.id}')">Cobrado</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -546,7 +847,11 @@
         try {
           const parsed = JSON.parse(reader.result);
           if (Array.isArray(parsed.items) && Array.isArray(parsed.sales)) {
-            state = parsed;
+            state = {
+              items: parsed.items,
+              sales: parsed.sales,
+              debts: Array.isArray(parsed.debts) ? parsed.debts : []
+            };
             saveState();
             alert('Copia recuperada correctamente.');
           } else {
@@ -564,10 +869,12 @@
       renderStats();
       renderSaleSelect();
       renderStockTable();
+      renderDebtsTable();
       renderSalesTable();
     }
 
     renderAll();
+    renderCart();
   </script>
 </body>
 </html>
